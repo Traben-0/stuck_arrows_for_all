@@ -1,4 +1,4 @@
-package traben.stuck_arrows_for_all;
+package traben.entity_pin_cushions;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -23,15 +23,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 
 import java.util.*;
 import java.util.random.RandomGenerator;
 
-public abstract class AllStuckInBodyLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
-    public AllStuckInBodyLayer(LivingEntityRenderer<T, M> renderer) {
+public abstract class PinCushionLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
+    public PinCushionLayer(LivingEntityRenderer<T, M> renderer) {
         super(renderer);
     }
 
@@ -150,7 +149,7 @@ public abstract class AllStuckInBodyLayer<T extends LivingEntity, M extends Enti
 //        return null;
 //    }
 
-    public static class ArrowLayer<T extends LivingEntity, M extends EntityModel<T>> extends AllStuckInBodyLayer<T, M> {
+    public static class ArrowLayer<T extends LivingEntity, M extends EntityModel<T>> extends PinCushionLayer<T, M> {
         private final EntityRenderDispatcher dispatcher;
 
         public ArrowLayer(EntityRendererProvider.Context context, LivingEntityRenderer<T, M> renderer) {
@@ -183,7 +182,7 @@ public abstract class AllStuckInBodyLayer<T extends LivingEntity, M extends Enti
         }
     }
 
-    public static class BeeStingerLayer<T extends LivingEntity, M extends EntityModel<T>> extends AllStuckInBodyLayer<T, M> {
+    public static class BeeStingerLayer<T extends LivingEntity, M extends EntityModel<T>> extends PinCushionLayer<T, M> {
         private static final ResourceLocation BEE_STINGER_LOCATION = ResourceLocation.withDefaultNamespace("textures/entity/bee/bee_stinger.png");
 
         public BeeStingerLayer(LivingEntityRenderer<T, M> renderer) {

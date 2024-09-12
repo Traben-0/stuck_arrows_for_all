@@ -61,5 +61,5 @@ shadowJar {
 
 remapJar {
     input.set shadowJar.archiveFile
-    atAccessWideners.add("all_stuck.accesswidener")
+    atAccessWideners.add("entity_pin_cushions.accesswidener")
 }

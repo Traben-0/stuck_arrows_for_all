@@ -39,7 +39,7 @@ loom {
         convertAccessWideners = true
         extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
 
-        mixinConfig "stuck_arrows_for_all.mixins.json"
+        mixinConfig "entity_pin_cushions.mixins.json"
     }
 }
 

@@ -4,29 +4,29 @@ loaderVersion = "[2,)"
 license = "GNU LGPL 3.0"
 
 [[mods]]
-modId = "stuck_arrows_for_all"
+modId = "entity_pin_cushions"
 version = "${version}"
-displayName = "Stuck Arrows For All"
+displayName = "Entity Pin Cushions"
 authors = "Traben"
 description = '''
-Lets arrows get stuck in most mobs, not just players.
+Lets arrows stick into most mobs, not just players.
 '''
-#logoFile = ""
+logoFile = "icon.png"
 
-[[dependencies.stuck_arrows_for_all]]
+[[dependencies.entity_pin_cushions]]
 modId = "neoforge"
 type = "required"
 versionRange = "[20,)"
 ordering = "NONE"
-side = "BOTH"
+side = "CLIENT"
 
-[[dependencies.stuck_arrows_for_all]]
+[[dependencies.entity_pin_cushions]]
 modId = "minecraft"
 type = "required"
 versionRange = "[1.20,)"
 ordering = "NONE"
-side = "BOTH"
+side = "CLIENT"
 
 
 [[mixins]]
-config = "stuck_arrows_for_all.mixins.json"
+config = "entity_pin_cushions.mixins.json"

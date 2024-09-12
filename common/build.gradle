@@ -10,5 +10,5 @@ dependencies {
 
 }
 loom {
-    accessWidenerPath = file("src/main/resources/all_stuck.accesswidener")
+    accessWidenerPath = file("src/main/resources/entity_pin_cushions.accesswidener")
 }

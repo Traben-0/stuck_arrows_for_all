@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "stuck_arrows_for_all",
+  "id": "entity_pin_cushions",
   "version": "${version}",
-  "name": "Stuck Arrows For All",
-  "description": "Lets arrows get stuck in most mobs, not just players.",
+  "name": "Entity Pin Cushions",
+  "description": "Lets arrows stick into most mobs, not just players.",
   "authors": [
     "Traben"
   ],
@@ -11,18 +11,16 @@
     "homepage": ""
   },
   "license": "LGPL-3.0",
-  "icon": "assets/stuck_arrows_for_all/icon.png",
+  "icon": "icon.png",
   "environment": "client",
   "entrypoints": {
-    "main": [
-      "traben.stuck_arrows_for_all.fabric.Stuck_arrows_for_allFabric"
-    ],
+
     "client": [
-      "traben.stuck_arrows_for_all.fabric.client.Stuck_arrows_for_allFabricClient"
+      "traben.entity_pin_cushions.fabric.client.EntityPinCushionsFabricClient"
     ]
   },
   "mixins": [
-    "stuck_arrows_for_all.mixins.json"
+    "entity_pin_cushions.mixins.json"
   ],
   "depends": {
     "fabricloader": "*",

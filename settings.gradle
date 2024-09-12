@@ -7,7 +7,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'stuck_arrows_for_all'
+rootProject.name = 'entity_pin_cushions'
 
 include 'common'
 include 'fabric'

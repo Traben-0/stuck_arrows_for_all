@@ -1,4 +1,4 @@
-package traben.stuck_arrows_for_all.mixin;
+package traben.entity_pin_cushions.mixin;
 
 import net.minecraft.client.model.*;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -10,10 +10,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import traben.stuck_arrows_for_all.AllStuckInBodyLayer;
+import traben.entity_pin_cushions.PinCushionLayer;
 
 @Mixin(value = LivingEntityRenderer.class,priority = 2000)
-public abstract class MixinAddArrows<T extends LivingEntity, M extends EntityModel<T>> {
+public abstract class MixinAddLayer<T extends LivingEntity, M extends EntityModel<T>> {
 
     @Shadow protected M model;
 
@@ -25,8 +25,8 @@ public abstract class MixinAddArrows<T extends LivingEntity, M extends EntityMod
                 && (this.model instanceof PiglinModel<?> || !(this.model instanceof PlayerModel<?>))){
             try {
                 LivingEntityRenderer<T, M> self = (LivingEntityRenderer) (Object) this;
-                addLayer(new AllStuckInBodyLayer.ArrowLayer<>(context, self));
-                addLayer(new AllStuckInBodyLayer.BeeStingerLayer<>(self));
+                addLayer(new PinCushionLayer.ArrowLayer<>(context, self));
+                addLayer(new PinCushionLayer.BeeStingerLayer<>(self));
             } catch (Exception e) {
                 System.out.println("Failed to add custom stuck arrows layer to " + this.getClass().getName());
             }
