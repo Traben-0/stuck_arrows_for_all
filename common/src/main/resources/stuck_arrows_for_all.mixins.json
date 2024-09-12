@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "traben.stuck_arrows_for_all.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "client": [
+    "MixinAddArrows"
+  ],
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

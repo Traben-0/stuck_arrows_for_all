@@ -1,0 +1,33 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+#issueTrackerURL = ""
+license = "GNU LGPL 3.0"
+showAsResourcePack = false
+
+[[mods]]
+modId = "stuck_arrows_for_all"
+version = "${version}"
+displayName = "Stuck Arrows For All"
+authors = "Traben"
+description = '''
+Lets arrows get stuck in most mobs, not just players.
+'''
+#logoFile = ""
+
+[[dependencies.stuck_arrows_for_all]]
+modId = "forge"
+mandatory = true
+versionRange = "[1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.stuck_arrows_for_all]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20,)"
+ordering = "NONE"
+side = "BOTH"
+
+
+[[mixins]]
+config = "stuck_arrows_for_all.mixins.json"
