@@ -20,7 +20,7 @@ subprojects {
 
     base {
         // Set up a suffixed format for the mod jar names, e.g. `example-fabric`.
-        archivesName = "$rootProject.archives_name-$project.name-1.21"
+        archivesName = "$rootProject.archives_name-$project.name-1.21.4"
     }
 
     repositories {
@@ -35,10 +35,14 @@ subprojects {
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
 //        mappings loom.officialMojangMappings()
+
+
         mappings loom.layered() {
             officialMojangMappings()
             parchment("org.parchmentmc.data:parchment-${rootProject.parchment_version}@zip")
         }
+
+
     }
 
     java {

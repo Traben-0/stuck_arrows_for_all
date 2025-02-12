@@ -1,61 +1,65 @@
 package traben.entity_pin_cushions;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Axis;
-import net.minecraft.client.model.AgeableListModel;
+import net.minecraft.client.model.ArrowModel;
+import net.minecraft.client.model.BeeStingerModel;
 import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.FrogModel;
-import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.TippableArrowRenderer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.layers.StuckInBodyLayer;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.Arrow;
-import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-
 import java.util.*;
-import java.util.random.RandomGenerator;
 
-public abstract class PinCushionLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
-    public PinCushionLayer(LivingEntityRenderer<T, M> renderer) {
+public abstract class PinCushionLayer<T extends LivingEntityRenderState, M extends EntityModel<T>> extends RenderLayer<T, M> {
+
+    protected StuckInBodyLayer.PlacementStyle placementStyle;
+    private final Model model;
+    private final ResourceLocation texture;
+
+    public PinCushionLayer(final RenderLayerParent<T, M> renderer, final Model model, final ResourceLocation texture, final StuckInBodyLayer.PlacementStyle placementStyle) {
         super(renderer);
+        this.model = model;
+        this.texture = texture;
+        this.placementStyle = placementStyle;
     }
 
-    protected abstract int numStuck(T entity);
+    protected abstract int numStuck();
 
-    protected abstract void renderStuckItem(PoseStack poseStack, MultiBufferSource buffer, int packedLight, Entity entity, float x, float y, float z, float partialTick);
+    private void renderStuckItem(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight, float x, float y, float z) {
+        float f = Mth.sqrt(x * x + z * z);
+        float g = (float)(Math.atan2((double)x, (double)z) * (double)(180F / (float)Math.PI));
+        float h = (float)(Math.atan2((double)y, (double)f) * (double)(180F / (float)Math.PI));
+        poseStack.mulPose(Axis.YP.rotationDegrees(g - 90.0F));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(h));
+        this.model.renderToBuffer(poseStack, bufferSource.getBuffer(this.model.renderType(this.texture)), packedLight, OverlayTexture.NO_OVERLAY);
+    }
 
-    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, T livingEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
-        int i = this.numStuck(livingEntity);
-        RandomSource randomSource = RandomSource.create(livingEntity.getId());
+    @Override
+    public void render(final PoseStack poseStack, final MultiBufferSource bufferSource, final int packedLight, final T renderState, final float yRot, final float xRot) {
+        int i = this.numStuck();
+        RandomSource randomSource = RandomSource.create(EntityPinCushions.PINCUSHION_ID);
         if (i > 0) {
             for (int j = 0; j < i; ++j) {
-                RandomGenerator partRand = new Random(j);
+                Random partRand = new Random(j);
                 poseStack.pushPose();
                 M model = getParentModel();
-                Pair<ModelPart,Runnable> modelPart = switch (model) {
-                    //case PlayerModel<?> playerModel -> playerModel.getRandomModelPart(randomSource);
-                    case AgeableListModel<?> animal ->
-                            bestFromList(animal.headParts(), animal.bodyParts(), partRand, poseStack);
-                    case FrogModel<?> frogModel ->
-                            bestFromListMutable(new ArrayList<>(Collections.singleton(frogModel.root())), partRand, poseStack,true);
-                    case HierarchicalModel<?> hierarchicalModel ->
-                            bestFromListMutable(new ArrayList<>(hierarchicalModel.root().children.values()), partRand, poseStack, true);
-                    default -> null;
-                };
+
+                Pair<ModelPart,Runnable> modelPart = bestFromListMutable(new ArrayList<>(model.root().children.values()), partRand, poseStack, true);
 
                 if (modelPart == null) {
                     poseStack.popPose();
@@ -63,11 +67,19 @@ public abstract class PinCushionLayer<T extends LivingEntity, M extends EntityMo
                 }
 
                 modelPart.getSecond().run();//transforms
-//                modelPart.translateAndRotate(poseStack);
 
                 float f = randomSource.nextFloat();
                 float g = randomSource.nextFloat();
                 float h = randomSource.nextFloat();
+
+                if (this.placementStyle == StuckInBodyLayer.PlacementStyle.ON_SURFACE) {
+                    int n = randomSource.nextInt(3);
+                    switch (n) {
+                        case 0 -> f = snapToFace(f);
+                        case 1 -> g = snapToFace(g);
+                        default -> h = snapToFace(h);
+                    }
+                }
 
                 if (!modelPart.getFirst().cubes.isEmpty()) {
                     ModelPart.Cube cube = modelPart.getFirst().getRandomCube(randomSource);
@@ -80,25 +92,29 @@ public abstract class PinCushionLayer<T extends LivingEntity, M extends EntityMo
                 f = -1.0F * (f * 2.0F - 1.0F);
                 g = -1.0F * (g * 2.0F - 1.0F);
                 h = -1.0F * (h * 2.0F - 1.0F);
-                this.renderStuckItem(poseStack, buffer, packedLight, livingEntity, f, g, h, partialTicks);
+                this.renderStuckItem(poseStack, bufferSource, packedLight, f, g, h);
                 poseStack.popPose();
             }
 
         }
     }
 
-    @Nullable
-    private Pair<ModelPart,Runnable> bestFromList(Iterable<ModelPart> part1, Iterable<ModelPart> part2, RandomGenerator randomSource, PoseStack poseStack) {
-        List<ModelPart> list = new ArrayList<>();
-        part1.forEach(list::add);
-        part2.forEach(list::add);
-        return bestFromListMutable(list, randomSource, poseStack, true);
+    private static float snapToFace(float value) {
+        return value > 0.5F ? 1.0F : 0.5F;
     }
 
+//    @Nullable
+//    private Pair<ModelPart,Runnable> bestFromList(Iterable<ModelPart> part1, Iterable<ModelPart> part2, Random randomSource, PoseStack poseStack) {
+//        List<ModelPart> list = new ArrayList<>();
+//        part1.forEach(list::add);
+//        part2.forEach(list::add);
+//        return bestFromListMutable(list, randomSource, poseStack, true);
+//    }
+
 
 
     @Nullable
-    private Pair<ModelPart,Runnable> bestFromListMutable(List<ModelPart> partsMutable, RandomGenerator randomSource, PoseStack poseStack, boolean firstIteration) {
+    private Pair<ModelPart,Runnable> bestFromListMutable(List<ModelPart> partsMutable, Random randomSource, PoseStack poseStack, boolean firstIteration) {
         Collections.shuffle(partsMutable, randomSource);
         //try children instead
         for (ModelPart modelPart : partsMutable) {
@@ -119,110 +135,39 @@ public abstract class PinCushionLayer<T extends LivingEntity, M extends EntityMo
             }
         }
         if (firstIteration && !partsMutable.isEmpty()) {
-            var part = partsMutable.getFirst();
+            //noinspection SequencedCollectionMethodCanBeUsed
+            var part = partsMutable.get(0);
             return Pair.of(part, () -> part.translateAndRotate(poseStack));
         }
         return null;
     }
 
-//    @Nullable
-//    private ModelPart bestFromListMutable(List<ModelPart> partsMutable, RandomGenerator randomSource, PoseStack poseStack) {
-//        Collections.shuffle(partsMutable, randomSource);
-//        //try children instead
-//        for (ModelPart modelPart : partsMutable) {
-//            if (modelPart.visible) {
-//                if (!modelPart.cubes.isEmpty() && !modelPart.skipDraw) {
-//                    return modelPart;
-//                }
-//                for (ModelPart part : modelPart.children.values()) {
-//                    if (part.visible) {
-//                        if (!part.cubes.isEmpty() && !part.skipDraw) {
-//                            modelPart.translateAndRotate(poseStack);
-//                            return part;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        if (!partsMutable.isEmpty())
-//            return partsMutable.getFirst();
-//        return null;
-//    }
+    public static class ArrowLayer<T extends LivingEntityRenderState, M extends EntityModel<T>> extends PinCushionLayer<T, M> {
 
-    public static class ArrowLayer<T extends LivingEntity, M extends EntityModel<T>> extends PinCushionLayer<T, M> {
-        private final EntityRenderDispatcher dispatcher;
-
-        public ArrowLayer(EntityRendererProvider.Context context, LivingEntityRenderer<T, M> renderer) {
-            super(renderer);
-            this.dispatcher = context.getEntityRenderDispatcher();
+        public ArrowLayer(EntityRendererProvider.Context context, LivingEntityRenderer<?,T, M> renderer) {
+            super(renderer,
+                    new ArrowModel(context.bakeLayer(ModelLayers.ARROW)),
+                    TippableArrowRenderer.NORMAL_ARROW_LOCATION,
+                    StuckInBodyLayer.PlacementStyle.IN_CUBE);
         }
 
-        protected int numStuck(T entity) {
-            return entity.getArrowCount();
-        }
-
-        protected void renderStuckItem(PoseStack poseStack, MultiBufferSource buffer, int packedLight, Entity entity, float x, float y, float z, float partialTick) {
-            float f = Mth.sqrt(x * x + z * z);
-            Arrow arrow = new Arrow(entity.level(), entity.getX(), entity.getY(), entity.getZ(), ItemStack.EMPTY, null){
-                @Override
-                public boolean isInWall() {
-                    return true;
-                }
-
-                @Override
-                public boolean onGround() {
-                    return true;
-                }
-            };
-            arrow.setYRot((float)(Math.atan2(x, z) * 57.2957763671875));
-            arrow.setXRot((float)(Math.atan2(y, f) * 57.2957763671875));
-            arrow.yRotO = arrow.getYRot();
-            arrow.xRotO = arrow.getXRot();
-            this.dispatcher.render(arrow, 0.0, 0.0, 0.0, 0.0F, partialTick, poseStack, buffer, packedLight);
+        protected int numStuck() {
+            return EntityPinCushions.PINCUSHION_COUNT_ARROW;
         }
     }
 
-    public static class BeeStingerLayer<T extends LivingEntity, M extends EntityModel<T>> extends PinCushionLayer<T, M> {
+    public static class BeeStingerLayer<T extends LivingEntityRenderState, M extends EntityModel<T>> extends PinCushionLayer<T, M> {
         private static final ResourceLocation BEE_STINGER_LOCATION = ResourceLocation.withDefaultNamespace("textures/entity/bee/bee_stinger.png");
 
-        public BeeStingerLayer(LivingEntityRenderer<T, M> renderer) {
-            super(renderer);
+        public BeeStingerLayer(EntityRendererProvider.Context context, LivingEntityRenderer<?,T, M> renderer) {
+            super(renderer,
+                    new BeeStingerModel(context.bakeLayer(ModelLayers.BEE_STINGER)),
+                    BEE_STINGER_LOCATION,
+                    StuckInBodyLayer.PlacementStyle.ON_SURFACE);
         }
 
-        protected int numStuck(T entity) {
-            return entity.getStingerCount();
-        }
-
-        protected void renderStuckItem(PoseStack poseStack, MultiBufferSource buffer, int packedLight, Entity entity, float x, float y, float z, float partialTick) {
-            float f = Mth.sqrt(x * x + z * z);
-            float g = (float)(Math.atan2((double)x, (double)z) * 57.2957763671875);
-            float h = (float)(Math.atan2((double)y, (double)f) * 57.2957763671875);
-            poseStack.translate(0.0F, 0.0F, 0.0F);
-            poseStack.mulPose(Axis.YP.rotationDegrees(g - 90.0F));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(h));
-            float i = 0.0F;
-            float j = 0.125F;
-            float k = 0.0F;
-            float l = 0.0625F;
-            float m = 0.03125F;
-            poseStack.mulPose(Axis.XP.rotationDegrees(45.0F));
-            poseStack.scale(0.03125F, 0.03125F, 0.03125F);
-            poseStack.translate(2.5F, 0.0F, 0.0F);
-            VertexConsumer vertexConsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(BEE_STINGER_LOCATION));
-
-            for(int n = 0; n < 4; ++n) {
-                poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
-                PoseStack.Pose pose = poseStack.last();
-                vertex(vertexConsumer, pose, -4.5F, -1, 0.0F, 0.0F, packedLight);
-                vertex(vertexConsumer, pose, 4.5F, -1, 0.125F, 0.0F, packedLight);
-                vertex(vertexConsumer, pose, 4.5F, 1, 0.125F, 0.0625F, packedLight);
-                vertex(vertexConsumer, pose, -4.5F, 1, 0.0F, 0.0625F, packedLight);
-            }
-
-        }
-
-        private static void vertex(VertexConsumer consumer, PoseStack.Pose pose, float x, int y, float u, float v, int packedLight) {
-            consumer.addVertex(pose, x, (float)y, 0.0F).setColor(-1).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(packedLight).setNormal(pose, 0.0F, 1.0F, 0.0F);
+        protected int numStuck() {
+            return EntityPinCushions.PINCUSHION_COUNT_STINGER;
         }
     }
 }

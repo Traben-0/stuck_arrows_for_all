@@ -23,7 +23,7 @@ side = "CLIENT"
 [[dependencies.entity_pin_cushions]]
 modId = "minecraft"
 type = "required"
-versionRange = "[1.20,)"
+versionRange = "[1.21.4,)"
 ordering = "NONE"
 side = "CLIENT"
 
